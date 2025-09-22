@@ -1,22 +1,16 @@
 {
   "$ref": "#/definitions/pipeline",
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema#",
   "additionalProperties": true,
   "definitions": {
     "across_var": {
       "additionalProperties": false,
       "properties": {
-        "fail_fast": {
-          "$ref": "#/definitions/boolean",
-          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled."
-        },
         "max_in_flight": {
           "description": "Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "oneOf": [
             {
-              "enum": [
-                "all"
-              ],
+              "enum": ["all"],
               "type": "string"
             },
             {
@@ -36,10 +30,7 @@
           "description": "The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed."
         }
       },
-      "required": [
-        "values",
-        "var"
-      ],
+      "required": ["values", "var"],
       "type": "object"
     },
     "anonymous_resource": {
@@ -62,10 +53,7 @@
           "description": "A specific version of the resource to fetch. This should be a map with  string keys and values. If not specified, the latest version will be  fetched."
         }
       },
-      "required": [
-        "source",
-        "type"
-      ],
+      "required": ["source", "type"],
       "type": "object"
     },
     "boolean": {
@@ -114,9 +102,7 @@
           "description": "Explicitly set the user to run as. If not specified, this defaults to the  user configured by the task's image. If not specified there, it's up to  the Garden backend, and may be e.g. `root` on Linux."
         }
       },
-      "required": [
-        "path"
-      ],
+      "required": ["path"],
       "type": "object"
     },
     "config": {
@@ -136,7 +122,7 @@
         },
         "memory": {
           "$ref": "#/definitions/number",
-          "description": "The maximum amount of memory available to the task container, measured in  bytes. 0 means unlimited."
+          "description": "The maximum amount of memory available to the task container, measured in  bytes. 0 means unlimited. Can use units such as `KB/MB/GB` ."
         }
       },
       "required": [],
@@ -145,12 +131,26 @@
     "dir_path": {
       "type": "string"
     },
-    "display_config": {},
+    "display_config": {
+      "additionalProperties": false,
+      "properties": {
+        "background_filter": {
+          "$ref": "#/definitions/string",
+          "description": "Default `opacity(30%) grayscale(100%)` .  Allows users to  specify custom  CSS  filters  https://developer.mozilla.org/en-US/docs/Web/CSS/filter  that  are applied to the `background_image` ."
+        },
+        "background_image": {
+          "$ref": "#/definitions/string",
+          "description": "Allows users to specify a custom background image for the pipeline.  Must be an http, https, or relative URL."
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
     "do_step": {
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -170,6 +170,10 @@
         "ensure": {
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
+        },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
         },
         "on_abort": {
           "$ref": "#/definitions/step",
@@ -199,9 +203,7 @@
           "description": "@example  Giving up \n   The following will run the `unit` task and cancel it if it takes  longer than 1 hour and 30 minutes:     \n\n    \n    plan:\n    - get: foo\n    - task: unit\n      file: foo/unit.yml\n      timeout: 1h30m"
         }
       },
-      "required": [
-        "do"
-      ],
+      "required": ["do"],
       "type": "object"
     },
     "dummy_config": {},
@@ -218,17 +220,11 @@
         },
         "type": {
           "description": "The `dummy` type supports configuring a static map of vars to values.    This is really only useful if you have no better alternative for credential  management but still have sensitive values that you would like to    creds-redacting  redact  them from build output.",
-          "enum": [
-            "dummy"
-          ],
+          "enum": ["dummy"],
           "type": "string"
         }
       },
-      "required": [
-        "config",
-        "name",
-        "type"
-      ],
+      "required": ["config", "name", "type"],
       "type": "object"
     },
     "duration": {
@@ -249,7 +245,7 @@
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -262,6 +258,10 @@
         "ensure": {
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
+        },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
         },
         "get": {
           "description": "The fetched bits will be registered in the build's artifact namespace  under the given identifier. Subsequent  task-step  and    put-step  which list the identifier as an input will have a  copy of the bits in their working directory.     \n@example  Fetching a repo and passing it to a task \n   Almost every simple job will look something like this: fetch my code  with a  get-step  and do something (run tests) with it in a    task-step  .     \n\n    \n    jobs:\n    - name: fetch-repo\n      plan:\n      - get: repo # fetches repo under artifact name \"repo\"\n      - task: ls-repo\n        config:\n          platform: linux\n          image_resource:\n            type: mock\n            source: {mirror_self: true}\n          # pass the \"repo\" artifact into the task\n          inputs:\n          - name: repo\n          run:\n            path: ls\n            args: [\"-lah\",\"repo\"]\n    \n    resources:\n    - name: repo\n      type: git\n      source:\n        uri: https://github.com/concourse/examples.git",
@@ -324,15 +324,11 @@
           "description": "Default `latest` .  The version of the resource to fetch.    If set to `latest` , scheduling will just find the latest available  version of a resource and use it, allowing versions to be skipped.  This is  usually what you want, e.g. if someone pushes 100 git commits.    If set to `every` , builds will walk through all available versions of  the resource. Note that if `passed` is also configured, it will only  step through the versions satisfying the constraints.    If set to a specific version (e.g. `{ref: abcdef123}` ), only that  version will be used. Note that the version must be available and detected by  the resource, otherwise the input will never be satisfied. You may want to  use  fly-check-resource  to force detection of resource versions,  if you need to use an older one that was never detected (as all newly  configured resources start from the latest version).",
           "oneOf": [
             {
-              "enum": [
-                "latest"
-              ],
+              "enum": ["latest"],
               "type": "string"
             },
             {
-              "enum": [
-                "every"
-              ],
+              "enum": ["every"],
               "type": "string"
             },
             {
@@ -341,9 +337,7 @@
           ]
         }
       },
-      "required": [
-        "get"
-      ],
+      "required": ["get"],
       "type": "object"
     },
     "group_config": {
@@ -361,13 +355,89 @@
           "description": "A unique name for the group. This should be short and simple as it will  be used as the tab name for navigation."
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "type": "object"
     },
     "identifier": {
       "type": "string"
+    },
+    "idtoken_config": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "description": "Default `RS256` .      The signature algorithm to use for the token.",
+          "oneOf": [
+            {
+              "enum": ["RS256"],
+              "type": "string"
+            },
+            {
+              "enum": ["ES256"],
+              "type": "string"
+            },
+            {
+              "$ref": "#/definitions/string"
+            }
+          ]
+        },
+        "audience": {
+          "description": "A list of audience-values to place into the token's aud-claim.",
+          "items": {
+            "$ref": "#/definitions/string"
+          },
+          "type": "array"
+        },
+        "expires_in": {
+          "$ref": "#/definitions/duration",
+          "description": "How long the token should be valid.      Default `1h` .  Cannot be longer than `24h` ."
+        },
+        "subject_scope": {
+          "description": "Default `pipeline` .      Determines what is put into the token's sub-claim. See    idtoken-subject-scope  for a detailed explanation.",
+          "oneOf": [
+            {
+              "enum": ["team"],
+              "type": "string"
+            },
+            {
+              "enum": ["pipeline"],
+              "type": "string"
+            },
+            {
+              "enum": ["instance"],
+              "type": "string"
+            },
+            {
+              "enum": ["job"],
+              "type": "string"
+            },
+            {
+              "$ref": "#/definitions/string"
+            }
+          ]
+        }
+      },
+      "required": ["audience"],
+      "type": "object"
+    },
+    "idtoken_var_source": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/idtoken_config",
+          "description": "idtoken_config      audience  [string]    A list of audience-values to place into the token's aud-claim.        subject_scope  `team` | `pipeline` | `instance` | `job` | string      Default `pipeline` .      Determines what is put into the token's sub-claim. See    idtoken-subject-scope  for a detailed explanation.        expires_in  duration    How long the token should be valid.      Default `1h` .  Cannot be longer than `24h` .        algorithm  `RS256` | `ES256` | string      Default `RS256` .      The signature algorithm to use for the token."
+        },
+        "name": {
+          "$ref": "#/definitions/string",
+          "description": "The name of the `((var))` source. This should be short and  simple. This name will be referenced  var-syntax  throughout  the config."
+        },
+        "type": {
+          "description": "The `idtoken` type issues JWTs which are signed by concourse  and contain information about the currently running pipeline/job.    These JWTs can be used to authenticate with external services.",
+          "enum": ["idtoken"],
+          "type": "string"
+        }
+      },
+      "required": ["config", "name", "type"],
+      "type": "object"
     },
     "in_parallel_config": {
       "additionalProperties": false,
@@ -388,16 +458,14 @@
           "type": "array"
         }
       },
-      "required": [
-        "steps"
-      ],
+      "required": ["steps"],
       "type": "object"
     },
     "in_parallel_step": {
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -410,6 +478,10 @@
         "ensure": {
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
+        },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
         },
         "in_parallel": {
           "description": "Steps are either configured as a array or within an    schema.in_parallel_config  .     \n@example  Fetching artifacts in parallel \n   Using the `in_parallel` step where possible is the easiest way  to speeding up a builds.    It is often used to fetch all dependent resources together at the  start of a build plan:     \n\n    \n    jobs:\n    - name: get-in-parallel\n      plan:\n      - in_parallel:\n        - get: ci\n        - get: repo\n        - get: code\n    \n    \n    resources:\n    - name: repo\n      type: mock\n    - name: code\n      type: mock\n    - name: ci\n      type: mock\n    \n\n          \n@example  Running a build matrix \n   If any step in the `in_parallel` fails, the build will fail, making it  useful for build matrices:     \n\n    \n    plan:\n    - get: some-repo\n    - in_parallel:\n      - task: unit-windows\n        file: some-repo/ci/windows.yml\n      - task: unit-linux\n        file: some-repo/ci/linux.yml\n      - task: unit-darwin\n        file: some-repo/ci/darwin.yml",
@@ -453,9 +525,7 @@
           "description": "@example  Giving up \n   The following will run the `unit` task and cancel it if it takes  longer than 1 hour and 30 minutes:     \n\n    \n    plan:\n    - get: foo\n    - task: unit\n      file: foo/unit.yml\n      timeout: 1h30m"
         }
       },
-      "required": [
-        "in_parallel"
-      ],
+      "required": ["in_parallel"],
       "type": "object"
     },
     "input": {
@@ -471,12 +541,10 @@
         },
         "path": {
           "$ref": "#/definitions/dir_path",
-          "description": "The path where the input will be placed. If not specified, the input's   `name` is used.    Paths are relative to the working directory of the task. Absolute paths  are not respected."
+          "description": "The path where the input will be placed. If not specified, the input's   `name` is used.    Paths are relative to the working directory of the task unless an  absolute path is given. An absolute path is any path that starts with a  forward slash `/` . We recommend only using relative paths unless  you have a strong technical reason to use absolute paths.    Any parent directory references ( `../` ) in the path will be removed."
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "type": "object"
     },
     "job": {
@@ -508,7 +576,7 @@
         },
         "name": {
           "$ref": "#/definitions/identifier",
-          "description": "The name of the job. This should be short; it will show up in URLs."
+          "description": "The name of the job. This should be short; it will show up in URLs. If you  want to rename a job, use  schema.job.old_name  ."
         },
         "old_name": {
           "$ref": "#/definitions/identifier",
@@ -553,17 +621,14 @@
           "type": "array"
         }
       },
-      "required": [
-        "name",
-        "plan"
-      ],
+      "required": ["name", "plan"],
       "type": "object"
     },
     "load_var_step": {
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -577,19 +642,17 @@
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
         },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
+        },
         "file": {
           "$ref": "#/definitions/file_path",
           "description": "The path to a file whose content shall be read and used as the var's  value."
         },
         "format": {
           "description": "The format of the file's content.    If unset, Concourse will try to detect the format from the file  extension. If the file format cannot be determined, Concourse will  fallback to `trim` .    If set to `json` , `yaml` , or `yml` , the file content  will be parsed accordingly and the resulting structure will be the  value of the var.    If set to `trim` , the var will be set to the content of the file  with any trailing and leading whitespace removed.    If set to `raw` , the var will be set to the content of the file  without modification (i.e. with any existing whitespace).     \n@example  Loading a var with multiple fields \n   Let's say we have a file with multiple fields, like this yaml file:      yaml  https://raw.githubusercontent.com/concourse/examples/master/pipelines/vars-file.yml      We could pass these values to subsequent steps by loading it  into a var with `load_var` , which will detect that it is in YAML  format based on the file extension:     \n\n    \n    jobs:\n    - name: loading-vars\n      plan:\n      - get: examples\n      - load_var: version\n        file: examples/pipelines/vars-file.yml\n      - put: img\n        params:\n          version: \"((.:version.hello))-((.:version.number))\"\n    \n    \n    resources:\n    - name: examples\n      type: git\n      icon: github\n      source:\n        uri: https://github.com/concourse/examples.git\n    - name: img\n      type: mock\n    \n\n     If the file `vars-file.yml` was generated in a task and printed  these values, they would be automatically redacted unless    schema.load-var.reveal `reveal: true` is set.",
-          "enum": [
-            "json",
-            "yaml",
-            "yml",
-            "trim",
-            "raw"
-          ],
+          "enum": ["json", "yaml", "yml", "trim", "raw"],
           "type": "string"
         },
         "load_var": {
@@ -628,10 +691,7 @@
           "description": "@example  Giving up \n   The following will run the `unit` task and cancel it if it takes  longer than 1 hour and 30 minutes:     \n\n    \n    plan:\n    - get: foo\n    - task: unit\n      file: foo/unit.yml\n      timeout: 1h30m"
         }
       },
-      "required": [
-        "file",
-        "load_var"
-      ],
+      "required": ["file", "load_var"],
       "type": "object"
     },
     "number": {
@@ -646,12 +706,10 @@
         },
         "path": {
           "$ref": "#/definitions/dir_path",
-          "description": "The path to a directory where the output will be taken from. If not  specified, the output's `name` is used.    Paths are relative to the working directory of the task. Absolute paths are not respected."
+          "description": "The path to a directory where the output will be taken from. If not  specified, the output's `name` is used.    Paths are relative to the working directory of the task unless an  absolute path is given. An absolute path is any path that starts with a  forward slash `/` . We recommend only using relative paths unless  you have a strong technical reason to use absolute paths.    Any parent directory references ( `../` ) in the path will be removed."
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "type": "object"
     },
     "pipeline": {
@@ -659,7 +717,7 @@
       "properties": {
         "display": {
           "$ref": "#/definitions/display_config",
-          "description": "`display` was introduced in Concourse v6.6.0. It is considered an   ** experimental ** feature.        Visual configurations for personalizing your pipeline.     \n@example  Background image \n   The following example will display an image in the background of the pipeline  it is configured on.     \n\n    \n    display:\n      background_image: https://avatars1.githubusercontent.com/u/7809479?s=400&v=4\n    \n\n           display_config      background_image  string    Allow users to specify a custom background image which is put at 30%  opacity, grayscaled and blended into existing background. Must be an  http, https, or relative URL."
+          "description": "`display` was introduced in Concourse v6.6.0. It is considered an   ** experimental ** feature.        Visual configurations for personalizing your pipeline.     \n@example  Background image \n   The following example will display an image in the background of the pipeline  it is configured on.     \n\n    \n    display:\n      background_image: https://avatars1.githubusercontent.com/u/7809479?s=400&v=4\n    \n\n           display_config      background_image  string    Allows users to specify a custom background image for the pipeline.  Must be an http, https, or relative URL.        background_filter  string      Default `opacity(30%) grayscale(100%)` .  Allows users to  specify custom  CSS  filters  https://developer.mozilla.org/en-US/docs/Web/CSS/filter  that  are applied to the `background_image` ."
         },
         "groups": {
           "description": "A list of job groups to use for organizing jobs in the web UI.    Groups have no functional effect on your pipeline. They are purely for  making it easier to grok large pipelines in the web UI.    Note: once you have added groups to your pipeline, all jobs must be in a  group.     \n@example  Grouping jobs \n   The following example will make the \"tests\" group the default view (since  it's listed first), separating the later jobs into a \"publish\" group:     \n\n    \n    groups:\n    - name: test\n      jobs:\n      - unit\n      - integration\n    - name: publish\n      jobs:\n      - deploy\n      - shipit\n    \n\n     This would display two tabs at the top of the home page: \"test\" and  \"publish\".    For a real world example of how groups can be used to simplify navigation  and provide logical grouping, see the groups used at the top of the page  in the  Concourse pipeline  https://ci.concourse-ci.org  .          group_config      name  identifier    A unique name for the group. This should be short and simple as it will  be used as the tab name for navigation.          jobs  [job.name]    A list of jobs that should appear in this group. A job may  appear in multiple groups. Neighbours of jobs in the current group will also  appear on the same page in order to give context of the location of the  group in the pipeline.    You may also use any valid  glob  https://www.man7.org/linux/man-pages/man7/glob.7.html    to represent several jobs, e.g.:     \n\n    \n    groups:\n    - name: develop\n      jobs:\n      - terraform-*\n      - test\n      - deploy-{dev,staging}\n    - name: ship\n      jobs:\n      - deploy-prod\n    - name: all\n      jobs:\n      - \"*\"\n    \n\n     In this example, the `develop` group will match   `terraform-apply` , `terraform-destroy` , `test` ,   `deploy-dev` , `deploy-staging` . The `ship` group will only match   `deploy-prod` . The `all` group will match all jobs in the pipeline.      Note that depending on how it's used, `*` , `{` , and   `}` have special meaning in YAML, and may need to be quoted (as  was done in the `all` job above)",
@@ -697,16 +755,14 @@
           "type": "array"
         }
       },
-      "required": [
-        "jobs"
-      ],
+      "required": ["jobs"],
       "type": "object"
     },
     "put_step": {
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -720,6 +776,10 @@
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
         },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
+        },
         "get_params": {
           "$ref": "#/definitions/config",
           "description": "Arbitrary configuration to pass to the resource during the implicit   `get` step. Refer to the resource type's documentation to see what  it supports.     \n@example  Parameterizing the implicit `get`\n   You can control the settings of the implicit `get` step  by setting `get_params` . For example, if you did not want a `put`   step utilizing the   `registry-image` resource  type  https://github.com/concourse/registry-image-resource  to download the  image, you would implement your `put` step as such:     \n\n    \n    plan:\n    - put: app-image\n      params:\n        build: git-resource\n      get_params:\n        skip_download: true"
@@ -728,15 +788,11 @@
           "description": "Default `all` .  When not set, or set to `all` , all  artifacts will be provided. This can result in slow performance if the  prior steps in the build plan register a bunch of large artifacts  before this step, so you may want to consider being explicit.    If configured as a list of identifiers, only the listed artifacts will  be provided to the container.    If set to `detect` , the artifacts are detected based on the  configured  schema.put.params  by looking for all string values  and using the first path segment as an identifier. (This may become the  default in the future.)     \n@example  Put Input Methods \n    \n\n    \n    jobs:\n    - name: put-input-methods\n      plan:\n      - in_parallel:\n        - get: repo-dev\n        - get: repo-master\n        - get: app-image\n        - get: ci\n      - put: all-inputs\n        resource: repo\n        inputs: all # default option\n        params:\n          file: ci/version.txt\n      - put: detect-inputs\n        resource: repo\n        inputs: detect # will only stream the \"ci\" artifact\n        params:\n          file: ci/version.txt\n      - put: explicit-inputs\n        resource: repo\n        inputs: # explicitly list artifacts to stream to put step\n          - ci\n        params:\n          file: ci/version.txt\n    \n    resources:\n    - name: repo\n      type: mock\n    - name: repo-dev\n      type: mock\n    - name: repo-master\n      type: mock\n    - name: app-image\n      type: mock\n    - name: ci\n      type: mock\n      source:\n        create_files:\n          version.txt: \"42\"",
           "oneOf": [
             {
-              "enum": [
-                "all"
-              ],
+              "enum": ["all"],
               "type": "string"
             },
             {
-              "enum": [
-                "detect"
-              ],
+              "enum": ["detect"],
               "type": "string"
             },
             {
@@ -746,6 +802,10 @@
               "type": "array"
             }
           ]
+        },
+        "no_get": {
+          "$ref": "#/definitions/boolean",
+          "description": "Skips the get step that usually follows the completion of the put step."
         },
         "on_abort": {
           "$ref": "#/definitions/step",
@@ -794,9 +854,7 @@
           "description": "@example  Giving up \n   The following will run the `unit` task and cancel it if it takes  longer than 1 hour and 30 minutes:     \n\n    \n    plan:\n    - get: foo\n    - task: unit\n      file: foo/unit.yml\n      timeout: 1h30m"
         }
       },
-      "required": [
-        "put"
-      ],
+      "required": ["put"],
       "type": "object"
     },
     "resource": {
@@ -809,9 +867,7 @@
               "$ref": "#/definitions/duration"
             },
             {
-              "enum": [
-                "never"
-              ],
+              "enum": ["never"],
               "type": "string"
             }
           ]
@@ -822,7 +878,7 @@
         },
         "expose_build_created_by": {
           "$ref": "#/definitions/boolean",
-          "description": "Default `false` .  If set to `true` , environment variable    resource-metadata `BUILD_CREATED_BY` will be available  in the metadata of a  get-step  get step  or    put-step  put step  ."
+          "description": "Default `false` .  If set to `true` , environment variable    resource-metadata `BUILD_CREATED_BY` will be available in  the metadata of a  put-step  put step  . This field is not made  available to the  get-step  ."
         },
         "icon": {
           "$ref": "#/definitions/string",
@@ -864,11 +920,7 @@
           "description": "If specified, web hooks can be sent to trigger an immediate  check    of the resource, specifying this value as a primitive form of  authentication via query params.    After configuring this value, you would then configure your hook sender with  the following painfully long path appended to your external URL:     `\n      /api/v1/teams/TEAM_NAME/pipelines/PIPELINE_NAME/resources/RESOURCE_NAME/check/webhook?webhook_token=WEBHOOK_TOKEN\n    `     For  managing-instanced-pipelines  instance pipelines  you will  need to include the pipeline vars for a single pipeline instance. Currently  you can not have webhooks for all instances of a pipeline.    The pipeline vars should be added to the webhook URL as  URL  parameters  https://developer.mozilla.org/en-US/docs/Learn/Common_questions/What_is_a_URL#parameters    with the format `vars.MY-VAR=\"SOME-VALUE\"` . A webhook URL for a  pipeline instance may look like this:     `\n      /api/v1/teams/TEAM_NAME/pipelines/PIPELINE_NAME/resources/RESOURCE_NAME/check/webhook?webhook_token=WEBHOOK_TOKEN&vars.my-var=\"some-value\"&vars.second-var=\"two\"\n    `     Note that the request payload sent to this API endpoint is entirely  ignored.  You should configure the resource as if you're not using web  hooks, as the resource  schema.resource.source  config  is still  the \"source of truth.\""
         }
       },
-      "required": [
-        "name",
-        "source",
-        "type"
-      ],
+      "required": ["name", "source", "type"],
       "type": "object"
     },
     "resource_type": {
@@ -888,7 +940,7 @@
         },
         "params": {
           "$ref": "#/definitions/config",
-          "description": "Arbitrary config to pass when running the `get` to fetch the resource  type's image."
+          "description": "Arbitrary config to pass when running the  get  to fetch the resource  type's image. This is equivalent to  schema.get.params  ."
         },
         "privileged": {
           "$ref": "#/definitions/boolean",
@@ -917,18 +969,14 @@
           ]
         }
       },
-      "required": [
-        "name",
-        "source",
-        "type"
-      ],
+      "required": ["name", "source", "type"],
       "type": "object"
     },
     "set_pipeline_step": {
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -941,6 +989,10 @@
         "ensure": {
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
+        },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
         },
         "file": {
           "$ref": "#/definitions/file_path",
@@ -967,15 +1019,13 @@
           "description": "@example  Running on success \n   The following will perform the second task only if the first one  succeeds:     \n\n    \n    plan:\n    - get: foo\n    - task: unit\n      file: foo/unit.yml\n      on_success:\n        task: alert\n        file: foo/alert.yml\n    \n\n     Note that this is semantically equivalent to the following:     \n\n    \n    plan:\n    - get: foo\n    - task: unit\n      file: foo/unit.yml\n    - task: alert\n      file: foo/alert.yml\n    \n\n     The `on_success` hook is provided mainly for cases where there is an  equivalent  schema.on_failure  , and having them next to each  other is more clear."
         },
         "set_pipeline": {
-          "description": "The identifier specifies the name of the pipeline to configure. Unless    schema.set-pipeline.team  is set, it will be configured  within the current team and be created  unpaused  . If set to `self` ,  the current pipeline will update its own config.         `set_pipeline: self` was introduced in Concourse v6.5.0. It is  considered an ** experimental ** feature and may be removed at any  time. Contribute to the associated    discussion  https://github.com/concourse/concourse/discussions/5732    with feedback.           \n@example  One pipeline configuring another \n   This is a way to ensure a pipeline stays up to date with its definition in  a source code repository, eliminating the need to manually run    fly-set-pipeline  .     \n\n    \n    jobs:\n    - name: set-pipeline\n      plan:\n      - get: examples\n        trigger: true\n      - set_pipeline: hello-world  # pipeline's name\n        file: examples/pipelines/hello-world.yml  # pipeline's config\n    \n    resources:\n    - name: examples\n      type: git\n      icon: github\n      source:\n        uri: https://github.com/concourse/examples.git",
+          "description": "The identifier specifies the name of the pipeline to configure. Unless    schema.set-pipeline.team  is set, it will be configured  within the current team and be created  unpaused  . If set to `self` ,  the current pipeline will update its own config.       \n@example  One pipeline configuring another \n   This is a way to ensure a pipeline stays up to date with its definition in  a source code repository, eliminating the need to manually run    fly-set-pipeline  .     \n\n    \n    jobs:\n    - name: set-pipeline\n      plan:\n      - get: examples\n        trigger: true\n      - set_pipeline: hello-world  # pipeline's name\n        file: examples/pipelines/hello-world.yml  # pipeline's config\n    \n    resources:\n    - name: examples\n      type: git\n      icon: github\n      source:\n        uri: https://github.com/concourse/examples.git",
           "oneOf": [
             {
               "$ref": "#/definitions/identifier"
             },
             {
-              "enum": [
-                "self"
-              ],
+              "enum": ["self"],
               "type": "string"
             }
           ]
@@ -989,7 +1039,7 @@
         },
         "team": {
           "$ref": "#/definitions/identifier",
-          "description": "By default, the `set_pipeline` step sets the pipeline for the  same  teams  team  that is running the build.    The `team` attribute can be used to specify another team.    Only the  main-team  is allowed to set another team's  pipeline.  Any team other than the  main-team  using the   `team` attribute will error, unless they reference their own team.        The `team` attribute was introduced in Concourse v6.4.0. It is  considered an ** experimental ** feature and may be removed at any  time. Contribute to the associated    discussion  https://github.com/concourse/concourse/discussions/5731    with feedback.         \n@example  Setting a pipeline on another team \n    \n\n    \n    jobs:\n    - name: set-pipeline\n      plan:\n      - get: examples\n        trigger: true\n      - set_pipeline: hello-world\n        file: examples/pipelines/hello-world.yml\n        team: other-team  # name of the team goes here\n    \n    resources:\n    - name: examples\n      type: git\n      icon: github\n      source:\n        uri: https://github.com/concourse/examples.git"
+          "description": "By default, the `set_pipeline` step sets the pipeline for the  same  teams  team  that is running the build.    The `team` attribute can be used to specify another team.    Only the  main-team  is allowed to set another team's  pipeline.  Any team other than the  main-team  using the   `team` attribute will error, unless they reference their own team.     \n@example  Setting a pipeline on another team \n    \n\n    \n    jobs:\n    - name: set-pipeline\n      plan:\n      - get: examples\n        trigger: true\n      - set_pipeline: hello-world\n        file: examples/pipelines/hello-world.yml\n        team: other-team  # name of the team goes here\n    \n    resources:\n    - name: examples\n      type: git\n      icon: github\n      source:\n        uri: https://github.com/concourse/examples.git"
         },
         "timeout": {
           "$ref": "#/definitions/duration",
@@ -1007,10 +1057,28 @@
           "description": "A map of template variables to pass to the pipeline config. Unlike    schema.set-pipeline.instance_vars `instance_vars` ,   `vars` are solely used to for    pipeline-static-vars  interpolation  , and do not become a part of  the pipeline's identifier.    Note that variables set with this field will not propagate to tasks configured  via  schema.task.file  . If you want those variables to be determined  at the time the pipeline is set, use  schema.task.vars  as well.     \n@example  Configuring static vars \n    \n\n    \n    jobs:\n    - name: set-pipeline-vars-only\n      plan:\n      - get: examples\n      - set_pipeline: pipeline-set-with-vars\n        file: examples/pipelines/pipeline-vars.yml\n        vars:\n          first: initial\n          number: \"9000\"\n          hello: HAL\n    \n    resources:\n    - name: examples\n      type: git\n      icon: github\n      source:\n        uri: https://github.com/concourse/examples.git"
         }
       },
-      "required": [
-        "file",
-        "set_pipeline"
-      ],
+      "required": ["file", "set_pipeline"],
+      "type": "object"
+    },
+    "ssm_config": {},
+    "ssm_var_source": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/ssm_config",
+          "description": "ssm_config      region  string    The AWS region to read secrets from."
+        },
+        "name": {
+          "$ref": "#/definitions/string",
+          "description": "The name of the `((var))` source. This should be short and  simple. This name will be referenced  var-syntax  throughout  the config."
+        },
+        "type": {
+          "description": "The `SSM` type supports configuring an  AWS Secrets  Manager  https://docs.aws.amazon.com/secretsmanager/  in a single  region as a `((var))` source.",
+          "enum": ["ssm"],
+          "type": "string"
+        }
+      },
+      "required": ["config", "name", "type"],
       "type": "object"
     },
     "step": {
@@ -1056,21 +1124,21 @@
         },
         "container_limits": {
           "$ref": "#/definitions/container_limits",
-          "description": "CPU and memory limits to enforce on the task container.    Note that these values, when specified, will override any limits set by  passing the `--default-task-cpu-limit` or   `--default-task-memory-limit` flags to the `concourse web` command.      container_limits      cpu  number    The maximum amount of CPU available to the task container, measured in  shares. 0 means unlimited.    CPU shares are relative to the CPU shares of other containers on a  worker. For example, if you have two containers both with a CPU  limit of 2 shares then each container will get 50% of the CPU's time.     \n\n    \n    Container A: 2 shares - 50% CPU\n    Container B: 2 shares - 50% CPU\n    Total CPU shares declared: 4\n    \n\n     If you introduce another container then the number of CPU time per  container changes. CPU shares are relative to each other.   \n\n    \n    Container A: 2 shares - 25% CPU\n    Container B: 2 shares - 25% CPU\n    Container C: 4 shares - 50% CPU\n    Total CPU shares declared: 8\n    \n\n           memory  number    The maximum amount of memory available to the task container, measured in  bytes. 0 means unlimited."
+          "description": "CPU and memory limits to enforce on the task container.    Note that these values, when specified, will override any limits set by  passing the `--default-task-cpu-limit` or   `--default-task-memory-limit` flags to the `concourse web` command.      container_limits      cpu  number    The maximum amount of CPU available to the task container, measured in  shares. 0 means unlimited.    CPU shares are relative to the CPU shares of other containers on a  worker. For example, if you have two containers both with a CPU  limit of 2 shares then each container will get 50% of the CPU's time.     \n\n    \n    Container A: 2 shares - 50% CPU\n    Container B: 2 shares - 50% CPU\n    Total CPU shares declared: 4\n    \n\n     If you introduce another container then the number of CPU time per  container changes. CPU shares are relative to each other.   \n\n    \n    Container A: 2 shares - 25% CPU\n    Container B: 2 shares - 25% CPU\n    Container C: 4 shares - 50% CPU\n    Total CPU shares declared: 8\n    \n\n           memory  number    The maximum amount of memory available to the task container, measured in  bytes. 0 means unlimited. Can use units such as `KB/MB/GB` ."
         },
         "image_resource": {
           "$ref": "#/definitions/anonymous_resource",
           "description": "The container image to run with, as provided by an anonymous    resources  resource  definition.    Whenever the task runs, the anonymous resource will be `check` ed to  discover the latest version available. The image will then be fetched onto  the worker, if necessary, just prior to running the task.    To use an image provided by a previous step within your build plan, set    schema.task.image  on the  task-step    instead.         ** NOTE: ** This field is only required for tasks targeting the    schema.task-config.platform  Linux platform  . This field will be  ignored for Windows and Darwin workers. Windows containers are currently  not supported and Darwin does not have native containers. The task will  run inside a clean temporary directory on the Windows/Darwin worker with  any inputs and outputs copied into the same directory. Any dependencies  should be pre-installed on the worker.         \n@example  Using the `golang` Docker image \n   The following task config will use the `golang` Docker  image  https://hub.docker.com/_/golang  to run `go version` :     \n\n    \n    platform: linux\n    \n    image_resource:\n      type: registry-image\n      source: {repository: golang}\n    \n    run:\n      path: go\n      args: [version]\n    \n\n           anonymous_resource      type  resource_type.name    The type of the resource. Usually `registry-image` .    You can use any resource type that returns a filesystem in the correct  format: a `/rootfs` directory containing a full filesystem, and a   `metadata.json` file containing.          source  config    The configuration for the resource; see    schema.resource.source  .          params  config    A map of arbitrary configuration to forward to the resource. Refer to the  resource type's documentation to see what it supports.          version  version    A specific version of the resource to fetch. This should be a map with  string keys and values. If not specified, the latest version will be  fetched."
         },
         "inputs": {
-          "description": "The set of artifacts used by task, determining which artifacts will be  available in the current directory when the task runs.    These are satisfied by  get-step  s or    schema.task-config.outputs  of a previous task. These can also  be provided by `-i` with  fly-execute  .    If any required inputs are missing at run-time, then the task will error  immediately.      input      name  identifier    The name of the input.          path  dir-path    The path where the input will be placed. If not specified, the input's   `name` is used.    Paths are relative to the working directory of the task. Absolute paths  are not respected.          optional  boolean      Default `false` .  If `true` , then the input is not  required by the task. The task may run even if this input is missing.    An `optional` input that is missing will not appear in the current  directory of the running task.",
+          "description": "The set of artifacts used by task, determining which artifacts will be  available in the current directory when the task runs.    These are satisfied by  get-step  s or    schema.task-config.outputs  of a previous task. These can also  be provided by `-i` with  fly-execute  .    If any required inputs are missing at run-time, then the task will error  immediately.      input      name  identifier    The name of the input.          path  dir-path    The path where the input will be placed. If not specified, the input's   `name` is used.    Paths are relative to the working directory of the task unless an  absolute path is given. An absolute path is any path that starts with a  forward slash `/` . We recommend only using relative paths unless  you have a strong technical reason to use absolute paths.    Any parent directory references ( `../` ) in the path will be removed.          optional  boolean      Default `false` .  If `true` , then the input is not  required by the task. The task may run even if this input is missing.    An `optional` input that is missing will not appear in the current  directory of the running task.",
           "items": {
             "$ref": "#/definitions/input"
           },
           "type": "array"
         },
         "outputs": {
-          "description": "The artifacts produced by the task.    Each output configures a directory to make available to later steps in the    build-plans  build plan  . The directory will be automatically  created before the task runs, and the task should place any artifacts it  wants to export in the directory.      output      name  identifier    The name of the output. The contents under `path` will be made  available to the rest of the plan under this name.          path  dir-path    The path to a directory where the output will be taken from. If not  specified, the output's `name` is used.    Paths are relative to the working directory of the task. Absolute paths are not respected.",
+          "description": "The artifacts produced by the task.    Each output configures a directory to make available to later steps in the    build-plans  build plan  . The directory will be automatically  created before the task runs, and the task should place any artifacts it  wants to export in the directory.      output      name  identifier    The name of the output. The contents under `path` will be made  available to the rest of the plan under this name.          path  dir-path    The path to a directory where the output will be taken from. If not  specified, the output's `name` is used.    Paths are relative to the working directory of the task unless an  absolute path is given. An absolute path is any path that starts with a  forward slash `/` . We recommend only using relative paths unless  you have a strong technical reason to use absolute paths.    Any parent directory references ( `../` ) in the path will be removed.",
           "items": {
             "$ref": "#/definitions/output"
           },
@@ -1082,11 +1150,7 @@
         },
         "platform": {
           "description": "The platform the task should run on. This determines the pool of workers  that the task can run against.    Technically any string value is allowed so long as a worker advertises the  same platform, but in practice only `linux` , `darwin` , and   `windows` are in use.",
-          "enum": [
-            "linux",
-            "darwin",
-            "windows"
-          ],
+          "enum": ["linux", "darwin", "windows"],
           "type": "string"
         },
         "rootfs_uri": {
@@ -1098,18 +1162,14 @@
           "description": "The command to execute in the container.    Note that this is  not  provided as a script blob, but explicit   `path` and `args` values; this allows `fly` to forward  arguments to the script, and forces your config `.yml` to stay fairly  small.      command      path  file-path    The name of or path to the executable to run.     `path` is relative to the working directory. If `dir` is  specified to set the working directory, then `path` is relative to  it.    This is commonly a path to a script provided by one of the task's inputs,  e.g. `my-resource/scripts/test` . It could also be a command like   `bash` (respecting standard `$PATH` lookup rules), or an absolute  path to a file to execute, e.g. `/bin/bash` .          args  [string]    Arguments to pass to the command. Note that when executed with    fly-cli  Fly  , any arguments passed to  fly-execute    are appended to this array.          dir  dir-path    A directory, relative to the initial working directory, to set as the  working directory when running the script.          user  string    Explicitly set the user to run as. If not specified, this defaults to the  user configured by the task's image. If not specified there, it's up to  the Garden backend, and may be e.g. `root` on Linux."
         }
       },
-      "required": [
-        "image_resource",
-        "platform",
-        "run"
-      ],
+      "required": ["image_resource", "platform", "run"],
       "type": "object"
     },
     "task_step": {
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -1131,9 +1191,17 @@
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
         },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
+        },
         "file": {
           "$ref": "#/definitions/file_path",
           "description": "A dynamic alternative to  schema.task.config  .     `file` points at a `.yml` file containing the    tasks  task config  , which allows this to be tracked with  your resources.    The first segment in the path should refer to another source from the  plan, and the rest of the path is relative to that source.    The content of the config file may contain template `((vars))` ,  which will be filled in using  schema.task.vars    or a configured  creds  credential manager  .   \n@example  Using a task config file \n   Uses  this config file  https://github.com/concourse/examples/blob/master/tasks/hello-world.yml  .   \n\n    \n    jobs:\n    - name: task-config-in-file\n      plan:\n      - get: ci\n      - task: config-from-file\n        file: ci/tasks/hello-world.yml\n    \n    resources:\n    - name: ci\n      type: git\n      source:\n        uri: https://github.com/concourse/examples.git"
+        },
+        "hermetic": {
+          "$ref": "#/definitions/boolean",
+          "description": "This setting is only supported by the `containerd` runtime on  Linux. For other runtimes this setting has no effect on container  networking. Please contact your Concourse operator to find out what  runtime your Concourse cluster is using.          Default `false` .  If set to `true` , the task will  have no outbound network access. Your task will not be able to reach  the internet or any local network resources that aren't also inside the  container.    For macOS and Windows this field has no effect since workloads on  those machines are not containerized."
         },
         "image": {
           "$ref": "#/definitions/identifier",
@@ -1201,16 +1269,14 @@
           "description": "A map of template variables to pass to an external task. Not to be  confused with  schema.task.params  , which provides    environment variables  to the task.    This is to be used with external tasks defined in    schema.task.file  .     \n@example  Parameterizing a task config file with vars \n   A var may be statically passed like so:     \n\n    \n    jobs:\n    - name: task-vars\n      plan:\n      - get: ci\n      - task: override-task-vars\n        file: ci/tasks/print-var.yml\n        vars: # statically defined vars\n          my-var: \"Cookies are the best\"\n          second-var: \"chips are a close second\"\n    \n    resources:\n    - name: ci\n      type: git\n      source:\n        uri: https://github.com/concourse/examples.git\n    \n\n     When run with the following  tasks  task config  :      yaml  https://raw.githubusercontent.com/concourse/examples/master/tasks/print-var.yml      The `\"((my-var))\"` will be resolved to `\"Cookies are the\n          best\"` and `((second-var))` will be resolved to `\"chips are\n          a close second\"` .    This can also be used in combination with  vars  from a    creds  credential manager  (i.e. Vault) as a way to re-map  variable names to match what the task is expecting:     \n\n    \n    jobs:\n    - name: task-vars\n      plan:\n      - get: ci\n      - task: override-task-vars\n        file: ci/tasks/print-var.yml\n        vars: # re-mapped vars\n          my-var: ((var-from-vault))\n          second-var: ((apple.type))\n    \n    resources:\n    - name: ci\n      type: git\n      source:\n        uri: https://github.com/concourse/examples.git"
         }
       },
-      "required": [
-        "task"
-      ],
+      "required": ["task"],
       "type": "object"
     },
     "try_step": {
       "additionalProperties": false,
       "properties": {
         "across": {
-          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.              fail_fast  boolean      Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.",
+          "description": "Contains a list of  schema.across_var  .      across_var      var  identifier    The name of the variable that will be added to the    local-vars  \" `.` \" var source  . This variable will only be  accessible in the scope of the step - each iteration of the step gets  its own scope.    If a variable of the same name already exists in the parent scope, a  warning will be printed.          values  [value]    The list of values that the  schema.across_var.var  var  will  iterate over when running the substep. If multiple  schema.across_var  vars    are configured, all combinations of values across all vars will run.    The list of values may also be interpolated. For instance, you may use  the  load-var-step  to first load a list of  schema.value    into a  local-vars  local var  , and then iterate across that dynamic  list of values.     \n@example  Value combinations \n   The following  schema.across  will run the task   `foo/build.yml` for each package defined in `foo/packages-to-build.json`   with Go 1.15 and 1.16.     \n\n    \n    plan:\n    - get: foo\n    - load_var: packages\n      file: foo/packages-to-build.json\n    - across:\n      - var: package\n        values: ((.:packages))\n      - var: go_version\n        values: ['1.15', '1.16']\n      task: build\n      file: foo/build.yml\n      vars:\n        go_version: ((.:go_version))\n        package: ((.:package))\n    \n\n     Supposing `foo/packages-to-build.json` had the following content:   \n\n    \n    [\"./cmd/first\", \"./cmd/second\", \"./cmd/third\"]\n    \n\n     ...then the task `foo/build.yml` would be run with the following  var combinations:         `{package: \"./cmd/first\", go_version: \"1.15\"}`        `{package: \"./cmd/first\", go_version: \"1.16\"}`        `{package: \"./cmd/second\", go_version: \"1.15\"}`        `{package: \"./cmd/second\", go_version: \"1.16\"}`        `{package: \"./cmd/third\", go_version: \"1.15\"}`        `{package: \"./cmd/third\", go_version: \"1.16\"}`                   max_in_flight  `all` | number      Default `1` .  If set to `all` , the substep will run  with all combinations of the current var in parallel. If set to a    schema.number  , only that number of substeps may run in parallel.     \n@example  Multiple vars \n   If multiple  schema.across_var  vars  are configured, the  effective `max_in_flight` is multiplicative. For instance:     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n        max_in_flight: all\n      - var: var2\n        values: [1, 2]\n      - var: var3\n        values: [foo, bar]\n        max_in_flight: 2\n    \n\n     Here, ** 6 substeps ** will run in parallel, since all 3 of   `var1` 's values can run in parallel, and 2 of `var3` 's  values can run in parallel.",
           "items": {
             "$ref": "#/definitions/across_var"
           },
@@ -1223,6 +1289,10 @@
         "ensure": {
           "$ref": "#/definitions/step",
           "description": "@example  Releasing a lock \n   The following build plan acquires a lock and then `ensure` s that the  lock is released.     \n\n    \n    plan:\n    - put: some-lock\n      params: {acquire: true}\n    - task: integration\n      file: foo/integration.yml\n      ensure:\n        put: some-lock\n        params: {release: some-lock}"
+        },
+        "fail_fast": {
+          "$ref": "#/definitions/boolean",
+          "description": "Default `false` .  When enabled, the `across` step will  fail fast by returning as soon as any sub-step fails. This means that running steps  will be interrupted and pending steps will no longer be scheduled.     \n@example  Fail fast \n   The `fail_fast` key sits at the same level as the `across` key.     \n\n    \n    plan:\n    - across:\n      - var: var1\n        values: [a, b, c]\n      - var: var2\n        values: [1, 2]\n      fail_fast: true"
         },
         "on_abort": {
           "$ref": "#/definitions/step",
@@ -1256,9 +1326,7 @@
           "description": "Performs the given step, ignoring any failure and masking it with  success.    This can be used when you want to perform some side-effect, but you  don't really want the whole build to fail if it doesn't work.     \n@example  Allowing non-critical behavior to fail \n   When emitting logs somewhere for analyzing later, if the destination flakes  out it may not really be critical, so we may want to just swallow the  error:     \n\n    \n    plan:\n    - task: run-tests\n      config: # ...\n      on_success:\n        try:\n          put: test-logs\n          params:\n            from: run-tests/*.log\n    - task: do-something-else\n      config: # ..."
         }
       },
-      "required": [
-        "try"
-      ],
+      "required": ["try"],
       "type": "object"
     },
     "value": {},
@@ -1268,7 +1336,13 @@
           "$ref": "#/definitions/vault_var_source"
         },
         {
+          "$ref": "#/definitions/ssm_var_source"
+        },
+        {
           "$ref": "#/definitions/dummy_var_source"
+        },
+        {
+          "$ref": "#/definitions/idtoken_var_source"
         }
       ]
     },
@@ -1356,9 +1430,7 @@
           "description": "The URL of the Vault API."
         }
       },
-      "required": [
-        "url"
-      ],
+      "required": ["url"],
       "type": "object"
     },
     "vault_var_source": {
@@ -1374,17 +1446,11 @@
         },
         "type": {
           "description": "The `vault` type supports configuring a    Vault  https://www.vaultproject.io  server as a   `((var))` source.",
-          "enum": [
-            "vault"
-          ],
+          "enum": ["vault"],
           "type": "string"
         }
       },
-      "required": [
-        "config",
-        "name",
-        "type"
-      ],
+      "required": ["config", "name", "type"],
       "type": "object"
     },
     "version": {

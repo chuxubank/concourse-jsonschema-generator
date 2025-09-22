@@ -105,7 +105,7 @@ pub fn serialize(schema_docs: &HashMap<String, Schema>) -> String {
     .collect::<HashMap<_, _>>();
 
   json!({
-    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema#",
     "$ref": "#/definitions/pipeline",
     "additionalProperties": true,
     "definitions": definitions
