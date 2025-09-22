@@ -24,8 +24,10 @@ jobs:
           repository: concourse/docs
           path: concourse-docs
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: jq zsh
+          version: 1.0
 
       - name: Build schema generator
         run: cargo build --release
