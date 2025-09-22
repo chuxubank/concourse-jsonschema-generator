@@ -194,38 +194,71 @@ fn parse_type(s: &str) -> PropertyType {
 }
 
 pub fn text_to_markdown(nodes: &Vec<LitNode>) -> String {
-  nodes
+  // Collect all mapped strings into a single String.
+  let content: String = nodes
     .iter()
     .map(|n| match n {
       LitNode::Text(t) => clean_text(t),
-      LitNode::Fn(example_fn, args) if (example_fn == "example-toggle") => {
-        format!(
-          "\n@example {}\n{}",
-          text_to_markdown(&args[0]),
-          text_to_markdown(&args[1])
-        )
-      }
-      LitNode::Fn(codeblock, args) if (codeblock == "codeblock") => {
-        format!(
-          "\n\n{}\n\n",
-          // raw_text(&args[0]).trim(),
-          trim_codeblock(&raw_text(&args[1]))
-        )
-      }
-      LitNode::Fn(code, args) if (code == "code") => {
-        format!("`{}`", raw_text(&args[0]))
-      }
-      LitNode::Fn(bold, args) if (bold == "bold") => {
-        format!("**{}**", text_to_markdown(&args[0]))
-      }
-      LitNode::Fn(warn, args) if (warn == "warn") => text_to_markdown(&args[0]),
-      LitNode::Fn(_any_, args) => args.iter().map(text_to_markdown).collect(),
+      LitNode::Fn(name, args) => match name.as_str() {
+        // Use a nested match to handle specific function names.
+        "example-toggle" => {
+          format!(
+            "\n@example {}\n{}",
+            text_to_markdown(&args[0]),
+            text_to_markdown(&args[1])
+          )
+        }
+        "reference" => {
+          // Check the number of arguments
+          match args.len() {
+            // Case 1: \reference{link}{text}
+            // This will be converted to a Markdown link: [text](#link)
+            2 => {
+              let link_target = text_to_markdown(&args[0]);
+              let link_text = text_to_markdown(&args[1]);
+              format!("[{}](#{})", link_text, link_target)
+            }
+            // Case 2: \reference{link}
+            // This will be converted to a simple link: [link](#link)
+            1 => {
+              let link_target = text_to_markdown(&args[0]);
+              format!("[{}](#{})", link_target, link_target)
+            }
+            // Case 3: Other number of arguments
+            // This is an invalid number of arguments, so we can return a warning.
+            _ => {
+              log::warn!(
+                "'reference' function expects 1 or 2 arguments, but got {}.",
+                args.len()
+              );
+              // Returning an empty string is a safe default to avoid breaking the output.
+              "".to_string()
+            }
+          }
+        }
+        "codeblock" => {
+          // It's more idiomatic to use `trim_codeblock` on the raw text directly.
+          format!("\n\n{}\n\n", trim_codeblock(&raw_text(&args[1])))
+        }
+        "code" => {
+          format!("`{}`", raw_text(&args[0]))
+        }
+        "bold" => {
+          format!("**{}**", text_to_markdown(&args[0]))
+        }
+        "warn" => {
+          // This seems to be a pass-through function, so we just process its argument.
+          text_to_markdown(&args[0])
+        }
+        // Handle all other functions by processing their arguments.
+        _ => args.iter().map(text_to_markdown).collect::<String>(),
+      },
       _ => "".to_string(),
     })
-    .collect::<String>()
-    .to_string()
-    .replace("\\{", "{")
-    .replace("\\}", "}")
+    .collect();
+
+  // Perform replacements on the final collected string.
+  content.replace("\\{", "{").replace("\\}", "}")
 }
 
 pub fn clean_text(text: &str) -> String {
@@ -267,8 +300,9 @@ pub fn raw_text(nodes: &Vec<LitNode>) -> String {
   nodes
     .iter()
     .map(|n| match n {
-      LitNode::Text(t) => t.as_str(),
-      _ => "",
+      LitNode::Text(t) => t.clone(),
+      LitNode::Fn(_name, args) => args.iter().map(raw_text).collect(),
+      _ => "".to_string(),
     })
     .collect::<String>()
 }
