@@ -33,6 +33,15 @@ jobs:
       - name: Generate new schema
         run: ./target/release/concourse-jsonschema-generator concourse-docs/lit/docs/**/*.lit | jq . > generated_schema.json
 
+      - name: Safety check on generated schema
+        run: |
+          LINES=$(wc -l < generated_schema.json)
+          if [ "$LINES" -lt 500 ]; then
+            echo "Error: Generated schema has only $LINES lines, which is below the safety threshold of 500."
+            exit 1
+          fi
+          echo "Generated schema has $LINES lines, which is above the safety threshold."
+
       - name: Check for changes
         id: diff
         run: |
