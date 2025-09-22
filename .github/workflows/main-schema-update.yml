@@ -35,6 +35,7 @@ jobs:
         run: cargo build --release
 
       - name: Generate new schema
+        shell: zsh
         run: ./target/release/concourse-jsonschema-generator concourse-docs/lit/docs/**/*.lit | jq . > generated_schema.json
 
       - name: Safety check on generated schema

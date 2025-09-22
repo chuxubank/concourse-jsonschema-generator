@@ -31,4 +31,5 @@ jobs:
         run: cargo build --release
 
       - name: Generate schema to verify process
+        shell: zsh
         run: ./target/release/concourse-jsonschema-generator concourse-docs/lit/docs/**/*.lit | jq . > /dev/null
