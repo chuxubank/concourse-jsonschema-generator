@@ -23,7 +23,7 @@ for your editor.
 Then add the schema with a directive at the top of the pipeline file
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/spion/concourse-jsonschema-generator/main/schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/chuxubank/concourse-jsonschema-generator/main/schema.json
 
 resource_types:
   # ...
