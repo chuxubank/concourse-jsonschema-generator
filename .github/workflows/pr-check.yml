@@ -1,0 +1,34 @@
+name: PR Check
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout generator
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Checkout concourse/docs
+        uses: actions/checkout@v4
+        with:
+          repository: concourse/docs
+          path: concourse-docs
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Build schema generator
+        run: cargo build --release
+
+      - name: Generate schema to verify process
+        run: ./target/release/concourse-jsonschema-generator concourse-docs/lit/docs/**/*.lit | jq . > /dev/null
