@@ -28,15 +28,16 @@ jobs:
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: jq zsh
+          packages: jq
           version: 1.0
 
       - name: Build schema generator
         run: cargo build --release
 
       - name: Generate new schema
-        shell: zsh
-        run: ./target/release/concourse-jsonschema-generator concourse-docs/lit/docs/**/*.lit | jq . > generated_schema.json
+        run: |
+          shopt -s globstar
+          ./target/release/concourse-jsonschema-generator concourse-docs/lit/docs/**/*.lit | jq . > generated_schema.json
 
       - name: Safety check on generated schema
         run: |
